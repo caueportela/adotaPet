@@ -6,6 +6,7 @@ import { AppService } from './app.service.js';
 import { UserModule } from './user/user.module.js';
 import { AuthModule } from './auth/auth.module.js';
 import { AnimalModule } from './animal/animal.module.js';
+import { InteresseModule } from './interesse/interesse.module.js';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { AnimalModule } from './animal/animal.module.js';
     UserModule,
     AuthModule,
     AnimalModule,
+    InteresseModule,
   ],
   controllers: [AppController],
   providers: [AppService],
