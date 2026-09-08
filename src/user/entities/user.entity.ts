@@ -9,7 +9,6 @@ export enum Role {
 @Entity('users')
 export class User extends BaseEntity {
 
-
     @Column()
     nome: string
 
