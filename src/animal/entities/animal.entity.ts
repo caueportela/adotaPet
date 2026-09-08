@@ -62,12 +62,17 @@ descricao: string
 @Column({ nullable: true })
 fotoUrl: string
 
+@Column({ nullable: true })
+observacao: string
+
 @Column({ 
     type: 'enum', 
     enum: StatusAnimal, 
     default: StatusAnimal.DISPONIVEL
 }) 
-status: StatusAnimal 
+status: StatusAnimal  
+
+
 
 
 }
