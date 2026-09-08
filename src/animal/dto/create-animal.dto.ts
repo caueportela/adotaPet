@@ -39,4 +39,8 @@ descricao?: string
 @IsOptional()
 fotoUrl?: string
 
+@IsString()
+@IsOptional()
+observacao?: string
+
 }
