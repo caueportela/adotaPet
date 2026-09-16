@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import type { LoginCredentials } from '../types/auth';
+import type { AuthUser, LoginCredentials, LoginResponse } from '../types/auth';
 
 interface LoginProps {
-  onLoginSuccess: (token: string) => void;
+  onLoginSuccess: (token: string, user: AuthUser) => void;
 }
 
 export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
@@ -30,9 +30,10 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
     }
 
     setCarregando(true);
-
+    
     try {
-      const resposta = await fetch('http://localhost:3000/auth/login', {
+      const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000';
+      const resposta = await fetch(`${API_URL}/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -40,14 +41,18 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
         body: JSON.stringify(formData),
     });
 
-    const data = await resposta.json();
+    const data = (await resposta.json()) as Partial<LoginResponse> & { message?: string }
 
     if (!resposta.ok) {
       setErro(data.message || 'Credenciais inválidas');
       return;
     }
 
-    onLoginSuccess(data.access_token);
+    if (!data.access_token || !data.user) {
+      setErro('Resposta inválida do servidor.');
+      return
+    }
+    onLoginSuccess(data.access_token, data.user);
     } catch {
       setErro('Erro ao se conectar ao servidor.');
     } finally {

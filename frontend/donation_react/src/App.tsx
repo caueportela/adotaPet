@@ -1,33 +1,27 @@
 import { useState } from 'react';
 import { Login } from './components/Login';
+import { Dashboard } from './components/Dashboard';
+import type { AuthUser } from './types/auth';
 
 export function App() {
   const [token, setToken] = useState<string | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
 
-  const handleLoginSuccess = (newToken: string) => {
+  const handleLoginSuccess = (newToken: string, loggedUser: AuthUser) => {
     setToken(newToken);
+    setUser(loggedUser);
   };
 
   const handleLogout = () => {
     setToken(null);
+    setUser(null);
   };
 
-  if (!token) {
+  if (!token || !user) {
     return <Login onLoginSuccess={handleLoginSuccess} />;
   }
 
-  return (
-    <div style={{ padding: '32px', fontFamily: 'Segoe UI, sans-serif' }}>
-      <h1>🐾 AdotaPet - Painel Administrativo</h1>
-      <p>Bem-vindo ao sistema de gestão de pets!</p>
-      <button 
-        onClick={handleLogout}
-        style={{ padding: '8px 16px', cursor: 'pointer', backgroundColor: '#d32f2f', color: '#fff', border: 'none', borderRadius: '4px' }}
-      >
-        Sair
-      </button>
-    </div>
-  );
+  return <Dashboard token={token} user={user} onLogout={handleLogout} />;
 }
 
 export default App;

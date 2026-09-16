@@ -3,9 +3,16 @@ export type LoginCredentials = {
   senha: string;
 }
 
-export type Funcionario = {
+export type UserRole = 'ADMIN' | 'FUNCIONARIO';
+
+export type AuthUser = {
   id: string;
   nome: string;
   email: string;
-  cargo: string;
+  role: UserRole;
+}
+
+export type LoginResponse = {
+  access_token: string;
+  user: AuthUser;
 }
