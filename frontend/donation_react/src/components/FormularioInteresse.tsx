@@ -174,7 +174,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     backgroundColor: '#ffffff',
     borderRadius: '8px',
     padding: '24px',
-    boxShadow: '4px 6px 0 #111',
+    boxShadow: '0 18px 42px rgba(15, 23, 42, 0.22)',
   },
   header: {
     display: 'flex',
@@ -193,10 +193,12 @@ const styles: { [key: string]: React.CSSProperties } = {
     color: '#667085',
   },
   closeButton: {
-    padding: '8px 12px',
-    border: '1px solid #c8d0d8',
+    padding: '9px 14px',
+    border: '1px solid #9ccc9c',
     borderRadius: '6px',
-    backgroundColor: '#f5f7f6',
+    backgroundColor: '#e8f5e9',
+    color: '#2e7d32',
+    fontWeight: 700,
     cursor: 'pointer',
   },
   form: {
@@ -208,12 +210,16 @@ const styles: { [key: string]: React.CSSProperties } = {
     flexDirection: 'column',
     gap: '6px',
     fontWeight: 600,
+    color: '#2f3b4d',
   },
   input: {
     padding: '10px 12px',
     border: '1px solid #aab2bd',
     borderRadius: '4px',
     fontSize: '14px',
+    backgroundColor: '#ffffff',
+    color: '#1f2933',
+    colorScheme: 'light',
   },
   textarea: {
     minHeight: '86px',
@@ -222,6 +228,9 @@ const styles: { [key: string]: React.CSSProperties } = {
     borderRadius: '4px',
     fontSize: '14px',
     resize: 'vertical',
+    backgroundColor: '#ffffff',
+    color: '#1f2933',
+    colorScheme: 'light',
   },
   submitButton: {
     padding: '12px 18px',
