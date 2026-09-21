@@ -42,6 +42,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ token, user, onLogout }) =
   const [interesses, setInteresses] = useState<Interesse[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
+  const [sucesso, setSucesso] = useState<string | null>(null);
   const [atualizandoId, setAtualizandoId] = useState<string | null>(null);
   const [telaAtual, setTelaAtual] = useState<
     'solicitacoes' | 'cadastroAnimal' | 'cadastroUsuario'
@@ -116,9 +117,30 @@ export const Dashboard: React.FC<DashboardProps> = ({ token, user, onLogout }) =
     };
   }, [interesses]);
 
+  const interessesVisiveis = useMemo(
+    () =>
+      interesses.filter(
+        (interesse) => interesse.status === 'PENDENTE' || interesse.status === 'EM_ANALISE',
+      ),
+    [interesses],
+  );
+
   const atualizarStatus = async (interesse: Interesse, status: StatusInteresse) => {
+    if (status === 'APROVADO') {
+      const confirmou = window.confirm(
+        `Você deseja mesmo aprovar a adoção de ${
+          interesse.animal?.nome ?? 'este pet'
+        } para ${interesse.nomeInteressado}?`,
+      );
+
+      if (!confirmou) {
+        return;
+      }
+    }
+
     setAtualizandoId(interesse.id);
     setErro(null);
+    setSucesso(null);
 
     try {
       const resposta = await fetch(`${API_URL}/interesse/${interesse.id}/status`, {
@@ -135,6 +157,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ token, user, onLogout }) =
       if (!resposta.ok) {
         throw new Error(data.message || 'Não foi possível atualizar o status.');
       }
+
+      setInteresses((atual) =>
+        atual.map((item) => (item.id === interesse.id ? { ...item, status } : item)),
+      );
 
       if (status === 'APROVADO') {
         if (!interesse.animal?.id) {
@@ -157,9 +183,17 @@ export const Dashboard: React.FC<DashboardProps> = ({ token, user, onLogout }) =
         }
       }
 
-      setInteresses((atual) =>
-        atual.map((item) => (item.id === interesse.id ? { ...item, status } : item)),
-      );
+      if (status === 'EM_ANALISE') {
+        setSucesso(`Solicitação de ${interesse.nomeInteressado} marcada como em análise.`);
+      }
+
+      if (status === 'APROVADO') {
+        setSucesso(`Solicitação de ${interesse.nomeInteressado} aprovada com sucesso.`);
+      }
+
+      if (status === 'REJEITADO') {
+        setSucesso(`Solicitação de ${interesse.nomeInteressado} recusada.`);
+      }
     } catch (error) {
       setErro(error instanceof Error ? error.message : 'Erro ao atualizar status.');
     } finally {
@@ -286,14 +320,15 @@ export const Dashboard: React.FC<DashboardProps> = ({ token, user, onLogout }) =
                 </div>
 
                 {erro && <div style={styles.errorBanner}>{erro}</div>}
+                {sucesso && <div style={styles.successBanner}>{sucesso}</div>}
 
                 {carregando ? (
                   <p>Carregando interesses...</p>
-                ) : interesses.length === 0 ? (
-                  <p>Nenhum interesse cadastrado ainda.</p>
+                ) : interessesVisiveis.length === 0 ? (
+                  <p>Nenhuma solicitação pendente no momento.</p>
                 ) : (
                   <div style={styles.list}>
-                    {interesses.map((interesse) => (
+                    {interessesVisiveis.map((interesse) => (
                       <article key={interesse.id} style={styles.item}>
                         <div>
                           <strong>{interesse.nomeInteressado}</strong>
@@ -537,6 +572,14 @@ const styles: { [key: string]: React.CSSProperties } = {
     borderRadius: '6px',
     marginBottom: '16px',
     border: '1px solid #ffcdd2',
+  },
+  successBanner: {
+    backgroundColor: '#e8f5e9',
+    color: '#2e7d32',
+    padding: '10px 12px',
+    borderRadius: '6px',
+    marginBottom: '16px',
+    border: '1px solid #9ccc9c',
   },
   list: {
     display: 'flex',

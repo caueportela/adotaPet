@@ -23,16 +23,55 @@ const porteLabel: Record<string, string> = {
   GRANDE: 'grande',
 };
 
+type FiltroEspecie = 'TODOS' | PetPublico['especie'];
+type FiltroSexo = 'TODOS' | NonNullable<PetPublico['sexoAnimal']>;
+type FiltroPorte = 'TODOS' | NonNullable<PetPublico['porte']>;
+
+const filtrosEspecie: Array<{ label: string; value: FiltroEspecie }> = [
+  { label: 'Todos', value: 'TODOS' },
+  { label: 'Cachorros', value: 'CACHORRO' },
+  { label: 'Gatos', value: 'GATO' },
+];
+
+const filtrosSexo: Array<{ label: string; value: FiltroSexo }> = [
+  { label: 'Todos', value: 'TODOS' },
+  { label: 'Macho', value: 'MACHO' },
+  { label: 'Fêmea', value: 'FEMEA' },
+];
+
+const filtrosPorte: Array<{ label: string; value: FiltroPorte }> = [
+  { label: 'Todos', value: 'TODOS' },
+  { label: 'Pequeno', value: 'PEQUENO' },
+  { label: 'Médio', value: 'MEDIO' },
+  { label: 'Grande', value: 'GRANDE' },
+];
+
 export const ClienteHome: React.FC<ClienteHomeProps> = ({ onBackHome }) => {
   const [pets, setPets] = useState<PetPublico[]>([]);
   const [petSelecionado, setPetSelecionado] = useState<PetPublico | null>(null);
+  const [filtroEspecie, setFiltroEspecie] = useState<FiltroEspecie>('TODOS');
+  const [filtroSexo, setFiltroSexo] = useState<FiltroSexo>('TODOS');
+  const [filtroPorte, setFiltroPorte] = useState<FiltroPorte>('TODOS');
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelado = false;
+    const params = new URLSearchParams({ status: 'DISPONIVEL' });
 
-    fetch(`${API_URL}/animal?status=DISPONIVEL`)
+    if (filtroEspecie !== 'TODOS') {
+      params.set('especie', filtroEspecie);
+    }
+
+    if (filtroSexo !== 'TODOS') {
+      params.set('sexoAnimal', filtroSexo);
+    }
+
+    if (filtroPorte !== 'TODOS') {
+      params.set('porte', filtroPorte);
+    }
+
+    fetch(`${API_URL}/animal?${params.toString()}`)
       .then(async (resposta) => {
         const data = await resposta.json();
 
@@ -58,9 +97,39 @@ export const ClienteHome: React.FC<ClienteHomeProps> = ({ onBackHome }) => {
     return () => {
       cancelado = true;
     };
-  }, []);
+  }, [filtroEspecie, filtroSexo, filtroPorte]);
 
   const totalDisponiveis = useMemo(() => pets.length, [pets]);
+
+  const trocarFiltroEspecie = (novoFiltro: FiltroEspecie) => {
+    if (novoFiltro === filtroEspecie) {
+      return;
+    }
+
+    setErro(null);
+    setCarregando(true);
+    setFiltroEspecie(novoFiltro);
+  };
+
+  const trocarFiltroSexo = (novoFiltro: FiltroSexo) => {
+    if (novoFiltro === filtroSexo) {
+      return;
+    }
+
+    setErro(null);
+    setCarregando(true);
+    setFiltroSexo(novoFiltro);
+  };
+
+  const trocarFiltroPorte = (novoFiltro: FiltroPorte) => {
+    if (novoFiltro === filtroPorte) {
+      return;
+    }
+
+    setErro(null);
+    setCarregando(true);
+    setFiltroPorte(novoFiltro);
+  };
 
   return (
     <div style={styles.page}>
@@ -93,13 +162,75 @@ export const ClienteHome: React.FC<ClienteHomeProps> = ({ onBackHome }) => {
             <h2 style={styles.sectionTitle}>Disponíveis</h2>
           </div>
 
+          <div style={styles.filters}>
+            <div style={styles.filterRow}>
+              <span style={styles.filterLabel}>Tipo:</span>
+              <div style={styles.filterButtons}>
+                {filtrosEspecie.map((filtro) => (
+                  <button
+                    key={filtro.value}
+                    type="button"
+                    onClick={() => trocarFiltroEspecie(filtro.value)}
+                    style={
+                      filtroEspecie === filtro.value
+                        ? styles.filterButtonActive
+                        : styles.filterButton
+                    }
+                  >
+                    {filtro.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div style={styles.filterRow}>
+              <span style={styles.filterLabel}>Sexo:</span>
+              <div style={styles.filterButtons}>
+                {filtrosSexo.map((filtro) => (
+                  <button
+                    key={filtro.value}
+                    type="button"
+                    onClick={() => trocarFiltroSexo(filtro.value)}
+                    style={
+                      filtroSexo === filtro.value
+                        ? styles.filterButtonActive
+                        : styles.filterButton
+                    }
+                  >
+                    {filtro.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div style={styles.filterRow}>
+              <span style={styles.filterLabel}>Porte:</span>
+              <div style={styles.filterButtons}>
+                {filtrosPorte.map((filtro) => (
+                  <button
+                    key={filtro.value}
+                    type="button"
+                    onClick={() => trocarFiltroPorte(filtro.value)}
+                    style={
+                      filtroPorte === filtro.value
+                        ? styles.filterButtonActive
+                        : styles.filterButton
+                    }
+                  >
+                    {filtro.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
           {erro && <div style={styles.errorBanner}>{erro}</div>}
 
           {carregando ? (
             <p>Carregando pets...</p>
           ) : pets.length === 0 ? (
             <div style={styles.emptyCard}>
-              Nenhum pet disponível no momento. Volte em breve.
+              Nenhum pet disponível com esses filtros.
             </div>
           ) : (
             <div style={styles.grid}>
@@ -235,6 +366,50 @@ const styles: { [key: string]: React.CSSProperties } = {
     color: '#1f2933',
     borderBottom: '3px solid #1f2933',
     fontSize: '22px',
+  },
+  filters: {
+    marginBottom: '24px',
+    padding: '14px 16px',
+    border: '1px solid #d7e0da',
+    borderRadius: '8px',
+    backgroundColor: '#ffffff',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '12px',
+  },
+  filterRow: {
+    display: 'grid',
+    gridTemplateColumns: '72px 1fr',
+    alignItems: 'center',
+    gap: '12px',
+  },
+  filterLabel: {
+    color: '#2f3b4d',
+    fontWeight: 700,
+    fontSize: '14px',
+  },
+  filterButtons: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: '8px',
+  },
+  filterButton: {
+    padding: '9px 14px',
+    border: '1px solid #c8d0d8',
+    borderRadius: '6px',
+    backgroundColor: '#f5f7f6',
+    color: '#2f3b4d',
+    cursor: 'pointer',
+    fontWeight: 700,
+  },
+  filterButtonActive: {
+    padding: '9px 14px',
+    border: '1px solid #9ccc9c',
+    borderRadius: '6px',
+    backgroundColor: '#e8f5e9',
+    color: '#2e7d32',
+    cursor: 'pointer',
+    fontWeight: 700,
   },
   grid: {
     display: 'grid',
