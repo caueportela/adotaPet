@@ -7,8 +7,14 @@ async function seed() {
   const app = await NestFactory.createApplicationContext(AppModule);
   const userService = app.get(UserService);
 
-  const email = process.env.SEED_ADMIN_EMAIL ?? 'admin@adotapet.com';
-  const senha = process.env.SEED_ADMIN_PASSWORD ?? 'admin123';
+  const email = process.env.SEED_ADMIN_EMAIL;
+  const senha = process.env.SEED_ADMIN_PASSWORD;
+
+  if (!email || !senha) {
+    console.error('Defina SEED_ADMIN_EMAIL e SEED_ADMIN_PASSWORD no .env antes de rodar o seed.');
+    await app.close();
+    process.exit(1);
+  }
 
   const existente = await userService.findByEmail(email);
   if (existente) {
