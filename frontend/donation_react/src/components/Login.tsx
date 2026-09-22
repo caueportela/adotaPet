@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import type { AuthUser, LoginCredentials, LoginResponse } from '../types/auth';
 
 interface LoginProps {
+  tipo: 'funcionario' | 'admin';
+  onBack: () => void;
   onLoginSuccess: (token: string, user: AuthUser) => void;
 }
 
-export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
+export const Login: React.FC<LoginProps> = ({ tipo, onBack, onLoginSuccess }) => {
   const [formData, setFormData] = useState<LoginCredentials>({
     email: '',
     senha: '',
@@ -52,6 +54,18 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
       setErro('Resposta inválida do servidor.');
       return
     }
+
+    const roleEsperado = tipo === 'admin' ? 'ADMIN' : 'FUNCIONARIO';
+
+    if (data.user.role !== roleEsperado) {
+      setErro(
+        tipo === 'admin'
+          ? 'Esta área é exclusiva para administradores.'
+          : 'Esta área é exclusiva para funcionários. Use a entrada de administrador.',
+      );
+      return;
+    }
+
     onLoginSuccess(data.access_token, data.user);
     } catch {
       setErro('Erro ao se conectar ao servidor.');
@@ -65,7 +79,9 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
       <div style={styles.card}>
         <div style={styles.header}>
           <h1 style={styles.logo}>🐾 AdotaPet</h1>
-          <p style={styles.subheading}>Painel do Funcionário</p>
+          <p style={styles.subheading}>
+            {tipo === 'admin' ? 'Painel Administrativo' : 'Painel do Funcionário'}
+          </p>
         </div>
 
         {erro && <div style={styles.errorBanner}>{erro}</div>}
@@ -109,6 +125,10 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
             {carregando ? 'Entrando...' : 'Entrar no Sistema'}
           </button>
         </form>
+
+        <button type="button" onClick={onBack} style={styles.backButton}>
+          Voltar para opções de acesso
+        </button>
       </div>
     </div>
   );
@@ -208,6 +228,16 @@ const styles: { [key: string]: React.CSSProperties } = {
     borderRadius: '6px',
     fontSize: '15px',
     fontWeight: 'bold',
+    cursor: 'pointer',
+  },
+  backButton: {
+    marginTop: '14px',
+    width: '100%',
+    padding: '10px',
+    backgroundColor: '#f5f7f6',
+    color: '#2f3b4d',
+    border: '1px solid #c8d0d8',
+    borderRadius: '6px',
     cursor: 'pointer',
   },
 };
