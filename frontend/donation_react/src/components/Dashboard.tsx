@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import type { AuthUser } from '../types/auth';
 import { CadastroAnimal } from './CadastroAnimal';
 import { CadastroUsuario } from './CadastroUsuario';
+import logoPatas from '../assets/logo-patas.png';
 
 type StatusInteresse = 'PENDENTE' | 'EM_ANALISE' | 'APROVADO' | 'REJEITADO';
 
@@ -44,9 +45,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ token, user, onLogout }) =
   const [erro, setErro] = useState<string | null>(null);
   const [sucesso, setSucesso] = useState<string | null>(null);
   const [atualizandoId, setAtualizandoId] = useState<string | null>(null);
+  const [interesseSelecionado, setInteresseSelecionado] = useState<Interesse | null>(null);
   const [telaAtual, setTelaAtual] = useState<
     'solicitacoes' | 'cadastroAnimal' | 'cadastroUsuario'
   >('solicitacoes');
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [telaAtual]);
 
   const carregarInteresses = async () => {
     setCarregando(true);
@@ -162,27 +168,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ token, user, onLogout }) =
         atual.map((item) => (item.id === interesse.id ? { ...item, status } : item)),
       );
 
-      if (status === 'APROVADO') {
-        if (!interesse.animal?.id) {
-          throw new Error('Solicitação aprovada, mas o animal não foi encontrado para marcar como adotado.');
-        }
-
-        const respostaAnimal = await fetch(`${API_URL}/animal/${interesse.animal.id}/status`, {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ status: 'ADOTADO' }),
-        });
-
-        const dataAnimal = await respostaAnimal.json();
-
-        if (!respostaAnimal.ok) {
-          throw new Error(dataAnimal.message || 'A solicitação foi aprovada, mas o animal não foi marcado como adotado.');
-        }
-      }
-
       if (status === 'EM_ANALISE') {
         setSucesso(`Solicitação de ${interesse.nomeInteressado} marcada como em análise.`);
       }
@@ -205,6 +190,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ token, user, onLogout }) =
     <div style={styles.page}>
       <header style={styles.header}>
         <div style={styles.brand}>
+          <img src={logoPatas} alt="" style={styles.brandLogo} />
           <span style={styles.brandIcon}>🐾</span>
           <div>
             <h1 style={styles.logo}>AdotaPet</h1>
@@ -346,7 +332,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ token, user, onLogout }) =
                           <button
                             type="button"
                             disabled={atualizandoId === interesse.id}
-                            onClick={() => atualizarStatus(interesse, 'EM_ANALISE')}
+                            onClick={() => {
+                              setInteresseSelecionado(interesse);
+                              atualizarStatus(interesse, 'EM_ANALISE');
+                            }}
                             style={styles.viewButton}
                           >
                             Ver
@@ -379,6 +368,56 @@ export const Dashboard: React.FC<DashboardProps> = ({ token, user, onLogout }) =
           )}
         </main>
       </div>
+
+      {interesseSelecionado && (
+        <div style={styles.drawerOverlay} onClick={() => setInteresseSelecionado(null)}>
+          <section style={styles.drawer} onClick={(event) => event.stopPropagation()}>
+            <div style={styles.drawerHeader}>
+              <h2 style={styles.drawerTitle}>Detalhes da solicitação</h2>
+              <button
+                type="button"
+                onClick={() => setInteresseSelecionado(null)}
+                style={styles.closeButton}
+              >
+                Fechar
+              </button>
+            </div>
+
+            <dl style={styles.drawerList}>
+              <dt style={styles.drawerLabel}>Interessado</dt>
+              <dd style={styles.drawerValue}>{interesseSelecionado.nomeInteressado}</dd>
+
+              <dt style={styles.drawerLabel}>E-mail</dt>
+              <dd style={styles.drawerValue}>{interesseSelecionado.email}</dd>
+
+              <dt style={styles.drawerLabel}>Telefone</dt>
+              <dd style={styles.drawerValue}>{interesseSelecionado.telefone}</dd>
+
+              <dt style={styles.drawerLabel}>Animal</dt>
+              <dd style={styles.drawerValue}>
+                {interesseSelecionado.animal?.nome ?? 'Não informado'}
+              </dd>
+
+              <dt style={styles.drawerLabel}>Status</dt>
+              <dd style={styles.drawerValue}>{statusLabel[interesseSelecionado.status]}</dd>
+
+              {interesseSelecionado.createdAt && (
+                <>
+                  <dt style={styles.drawerLabel}>Recebido em</dt>
+                  <dd style={styles.drawerValue}>
+                    {new Date(interesseSelecionado.createdAt).toLocaleString('pt-BR')}
+                  </dd>
+                </>
+              )}
+
+              <dt style={styles.drawerLabel}>Mensagem</dt>
+              <dd style={styles.drawerValue}>
+                {interesseSelecionado.mensagem || 'Nenhuma mensagem enviada.'}
+              </dd>
+            </dl>
+          </section>
+        </div>
+      )}
     </div>
   );
 };
@@ -392,7 +431,7 @@ const styles: { [key: string]: React.CSSProperties } = {
       radial-gradient(at 100% 100%, rgba(129, 199, 132, 0.2) 0px, transparent 50%),
       url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 100 100'%3E%3Cg fill='%232e7d32' fill-opacity='0.07'%3E%3Ccircle cx='30' cy='35' r='6'/%3E%3Ccircle cx='50' cy='28' r='6'/%3E%3Ccircle cx='70' cy='35' r='6'/%3E%3Cpath d='M50 45 c-12 0 -20 8 -20 18 c0 10 8 16 20 16 c12 0 20 -6 20 -16 c0 -10 -8 -18 -20 -18 z'/%3E%3C/g%3E%3C/svg%3E")
     `,
-    fontFamily: 'Segoe UI, sans-serif',
+    fontFamily: "'Nunito', 'Segoe UI', sans-serif",
   },
   header: {
     height: '82px',
@@ -408,6 +447,11 @@ const styles: { [key: string]: React.CSSProperties } = {
     alignItems: 'center',
     gap: '12px',
   },
+  brandLogo: {
+    width: '56px',
+    height: '56px',
+    objectFit: 'contain',
+  },
   brandIcon: {
     fontSize: '28px',
   },
@@ -415,6 +459,8 @@ const styles: { [key: string]: React.CSSProperties } = {
     margin: 0,
     color: '#1f2933',
     fontSize: '30px',
+    fontFamily: "'Fredoka', sans-serif",
+    fontWeight: 600,
   },
   subtitle: {
     margin: '2px 0 0',
@@ -507,6 +553,8 @@ const styles: { [key: string]: React.CSSProperties } = {
     margin: 0,
     color: '#1f2933',
     fontSize: '30px',
+    fontFamily: "'Fredoka', sans-serif",
+    fontWeight: 600,
   },
   pageSubtitle: {
     margin: '4px 0 0',
@@ -637,5 +685,62 @@ const styles: { [key: string]: React.CSSProperties } = {
     color: '#c62828',
     fontWeight: 600,
     cursor: 'pointer',
+  },
+  drawerOverlay: {
+    position: 'fixed',
+    inset: 0,
+    backgroundColor: 'rgba(15, 23, 42, 0.4)',
+    display: 'grid',
+    placeItems: 'center',
+    padding: '24px',
+    zIndex: 30,
+  },
+  drawer: {
+    width: '100%',
+    maxWidth: '480px',
+    maxHeight: '80vh',
+    overflowY: 'auto',
+    backgroundColor: '#ffffff',
+    borderRadius: '8px',
+    padding: '24px',
+    boxShadow: '0 18px 42px rgba(15, 23, 42, 0.22)',
+  },
+  drawerHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    gap: '16px',
+    marginBottom: '18px',
+  },
+  drawerTitle: {
+    margin: 0,
+    color: '#1f2933',
+    fontSize: '20px',
+  },
+  closeButton: {
+    padding: '9px 14px',
+    border: '1px solid #9ccc9c',
+    borderRadius: '6px',
+    backgroundColor: '#e8f5e9',
+    color: '#2e7d32',
+    fontWeight: 700,
+    cursor: 'pointer',
+  },
+  drawerList: {
+    margin: 0,
+    display: 'grid',
+    rowGap: '4px',
+  },
+  drawerLabel: {
+    margin: '12px 0 0',
+    color: '#667085',
+    fontSize: '12px',
+    fontWeight: 700,
+    textTransform: 'uppercase',
+  },
+  drawerValue: {
+    margin: 0,
+    color: '#1f2933',
+    fontSize: '15px',
   },
 };

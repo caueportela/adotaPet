@@ -10,6 +10,7 @@ export type PetPublico = {
   porte?: 'PEQUENO' | 'MEDIO' | 'GRANDE';
   descricao?: string | null;
   fotoUrl?: string | null;
+  status?: 'DISPONIVEL' | 'EM_PROCESSO' | 'ADOTADO';
 };
 
 type InteresseForm = {
@@ -44,6 +45,21 @@ export const FormularioInteresse: React.FC<FormularioInteresseProps> = ({ pet, o
     setForm((atual) => ({ ...atual, [name]: value }));
   };
 
+  const formatarTelefone = (valor: string) => {
+    const digitos = valor.replace(/\D/g, '').slice(0, 11);
+
+    if (digitos.length <= 2) return digitos;
+    if (digitos.length <= 6) return `(${digitos.slice(0, 2)}) ${digitos.slice(2)}`;
+    if (digitos.length <= 10) {
+      return `(${digitos.slice(0, 2)}) ${digitos.slice(2, 6)}-${digitos.slice(6)}`;
+    }
+    return `(${digitos.slice(0, 2)}) ${digitos.slice(2, 7)}-${digitos.slice(7)}`;
+  };
+
+  const handleTelefoneChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setForm((atual) => ({ ...atual, telefone: formatarTelefone(event.target.value) }));
+  };
+
   const enviarInteresse = async (event: React.FormEvent) => {
     event.preventDefault();
     setErro(null);
@@ -51,6 +67,12 @@ export const FormularioInteresse: React.FC<FormularioInteresseProps> = ({ pet, o
 
     if (!form.nomeInteressado || !form.email || !form.telefone) {
       setErro('Preencha nome, e-mail e telefone para contato.');
+      return;
+    }
+
+    const telefoneDigitos = form.telefone.replace(/\D/g, '');
+    if (telefoneDigitos.length < 10 || telefoneDigitos.length > 11) {
+      setErro('Informe um telefone válido, com DDD.');
       return;
     }
 
@@ -132,8 +154,10 @@ export const FormularioInteresse: React.FC<FormularioInteresseProps> = ({ pet, o
             <input
               name="telefone"
               value={form.telefone}
-              onChange={handleChange}
+              onChange={handleTelefoneChange}
+              inputMode="numeric"
               placeholder="(00) 90000-0000"
+              maxLength={15}
               style={styles.input}
             />
           </label>

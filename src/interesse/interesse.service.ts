@@ -1,8 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Interesse } from './entities/interesse.entity.js';
-import { Animal } from '../animal/entities/animal.entity.js';
+import { Interesse, StatusInteresse } from './entities/interesse.entity.js';
+import { Animal, StatusAnimal } from '../animal/entities/animal.entity.js';
 import { User } from '../user/entities/user.entity.js';
 import { CreateInteresseDto } from './dto/create-interesse.dto.js';
 import { UpdateStatusInteresseDto } from './dto/update-status-interesse.dto.js';
@@ -25,7 +25,14 @@ export class InteresseService {
     }
 
     const novoInteresse = this.interesseRepository.create({ ...dados, animal });
-    return this.interesseRepository.save(novoInteresse);
+    const interesseSalvo = await this.interesseRepository.save(novoInteresse);
+
+    if (animal.status === StatusAnimal.DISPONIVEL) {
+      animal.status = StatusAnimal.EM_PROCESSO;
+      await this.animalRepository.save(animal);
+    }
+
+    return interesseSalvo;
   }
 
   findAll(): Promise<Interesse[]> {
@@ -37,7 +44,10 @@ export class InteresseService {
     updateStatusInteresseDto: UpdateStatusInteresseDto,
     analisadoPorId: string,
   ): Promise<Interesse> {
-    const interesse = await this.interesseRepository.findOne({ where: { id } });
+    const interesse = await this.interesseRepository.findOne({
+      where: { id },
+      relations: { animal: true },
+    });
     if (!interesse) {
       throw new NotFoundException('Manifestação de interesse não encontrada.');
     }
@@ -45,6 +55,27 @@ export class InteresseService {
     interesse.status = updateStatusInteresseDto.status;
     interesse.analisadoPor = { id: analisadoPorId } as User;
 
-    return this.interesseRepository.save(interesse);
+    const interesseSalvo = await this.interesseRepository.save(interesse);
+
+    if (updateStatusInteresseDto.status === StatusInteresse.APROVADO && interesse.animal) {
+      interesse.animal.status = StatusAnimal.ADOTADO;
+      await this.animalRepository.save(interesse.animal);
+    }
+
+    if (updateStatusInteresseDto.status === StatusInteresse.REJEITADO && interesse.animal) {
+      const outrosInteressados = await this.interesseRepository.count({
+        where: [
+          { animal: { id: interesse.animal.id }, status: StatusInteresse.PENDENTE },
+          { animal: { id: interesse.animal.id }, status: StatusInteresse.EM_ANALISE },
+        ],
+      });
+
+      if (outrosInteressados === 0 && interesse.animal.status === StatusAnimal.EM_PROCESSO) {
+        interesse.animal.status = StatusAnimal.DISPONIVEL;
+        await this.animalRepository.save(interesse.animal);
+      }
+    }
+
+    return interesseSalvo;
   }
 }

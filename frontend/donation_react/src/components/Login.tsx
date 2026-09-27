@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import type { AuthUser, LoginCredentials, LoginResponse } from '../types/auth';
+import logoPatas from '../assets/logo-patas.png';
 
 interface LoginProps {
   tipo: 'funcionario' | 'admin';
@@ -78,7 +79,10 @@ export const Login: React.FC<LoginProps> = ({ tipo, onBack, onLoginSuccess }) =>
     <div style={styles.container}>
       <div style={styles.card}>
         <div style={styles.header}>
-          <h1 style={styles.logo}>🐾 AdotaPet</h1>
+          <div style={styles.logoRow}>
+            <img src={logoPatas} alt="" style={styles.brandLogo} />
+            <h1 style={styles.logo}>🐾 AdotaPet</h1>
+          </div>
           <p style={styles.subheading}>
             {tipo === 'admin' ? 'Painel Administrativo' : 'Painel do Funcionário'}
           </p>
@@ -148,7 +152,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     radial-gradient(at 100% 100%, rgba(129, 199, 132, 0.2) 0px, transparent 50%),
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 100 100'%3E%3Cg fill='%232e7d32' fill-opacity='0.07'%3E%3Ccircle cx='30' cy='35' r='6'/%3E%3Ccircle cx='50' cy='28' r='6'/%3E%3Ccircle cx='70' cy='35' r='6'/%3E%3Cpath d='M50 45 c-12 0 -20 8 -20 18 c0 10 8 16 20 16 c12 0 20 -6 20 -16 c0 -10 -8 -18 -20 -18 z'/%3E%3C/g%3E%3C/svg%3E")
   `,
-  fontFamily: 'Segoe UI, sans-serif',
+  fontFamily: "'Nunito', 'Segoe UI', sans-serif",
 },
   card: {
     width: '100%',
@@ -162,10 +166,23 @@ const styles: { [key: string]: React.CSSProperties } = {
     textAlign: 'center',
     marginBottom: '24px',
   },
+  logoRow: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '10px',
+  },
+  brandLogo: {
+    width: '48px',
+    height: '48px',
+    objectFit: 'contain',
+  },
   logo: {
     margin: 0,
     color: '#2e7d32',
     fontSize: '28px',
+    fontFamily: "'Fredoka', sans-serif",
+    fontWeight: 600,
   },
   subheading: {
     margin: '4px 0 0',

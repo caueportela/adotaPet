@@ -1,4 +1,4 @@
-import { IsEmail, IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsOptional, IsPhoneNumber, IsString, IsUUID } from 'class-validator';
 
 export class CreateInteresseDto {
   @IsUUID()
@@ -13,7 +13,7 @@ export class CreateInteresseDto {
   @IsNotEmpty({ message: 'O e-mail é obrigatório.' })
   email: string;
 
-  @IsString()
+  @IsPhoneNumber('BR', { message: 'Informe um telefone válido, com DDD.' })
   @IsNotEmpty({ message: 'O telefone é obrigatório.' })
   telefone: string;
 

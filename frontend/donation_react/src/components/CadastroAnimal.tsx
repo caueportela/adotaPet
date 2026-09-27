@@ -328,6 +328,7 @@ export const CadastroAnimal: React.FC<CadastroAnimalProps> = ({ token }) => {
     setAnimalEmEdicaoId(animal.id);
     setErro(null);
     setSucesso(null);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const salvarAnimal = async (event: React.FormEvent) => {
@@ -476,7 +477,7 @@ export const CadastroAnimal: React.FC<CadastroAnimalProps> = ({ token }) => {
           </label>
 
           <label style={styles.field}>
-            Idade
+            Idade (em anos)
             <input
               name="idade"
               value={form.idade}
@@ -773,6 +774,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     border: '1px solid #c8d0d8',
     borderRadius: '6px',
     background: '#f5f7f6',
+    color: '#000000',
     cursor: 'pointer',
   },
   saveButton: {
